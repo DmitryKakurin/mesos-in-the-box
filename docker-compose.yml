@@ -1,57 +1,61 @@
-zookeeper:
-  image: mesoscloud/zookeeper:3.4.6-ubuntu-14.04
-  net: host
-  environment:
-     - MYID=1
-     - SERVERS=localhost
+version: '2'
 
-master:
-  image: mesosphere/mesos-master:1.0.11.0.1-2.0.93.ubuntu1404
-  net: host
-  environment:
-    - MESOS_HOSTNAME=localhost
-    - MESOS_IP=127.0.0.1
-    - MESOS_QUORUM=1
-    - MESOS_ZK=zk://localhost:2181/mesos
+services:
+  zookeeper:
+    image: mesoscloud/zookeeper:3.4.8-ubuntu
+    network_mode: "host"
+    environment:
+      - MYID=1
+      - SERVERS=localhost
 
-slave:
-  build: mesos-slave
-  net: host
-  privileged: true
-  environment:
-    - MESOS_HOSTNAME=localhost
-    - MESOS_IP=127.0.0.1
-    - MESOS_PORT=5051
-    - MESOS_MASTER=zk://localhost:2181/mesos
-    - MESOS_CONTAINERIZERS=docker,mesos
-  volumes:
-    - /sys/fs/cgroup:/sys/fs/cgroup
-    - /var/run/docker.sock:/var/run/docker.sock
+  master:
+    image: mesosphere/mesos-master:1.1.0-2.0.107.ubuntu1404
+    network_mode: "host"
+    environment:
+      - MESOS_HOSTNAME=localhost
+      - MESOS_IP=127.0.0.1
+      - MESOS_QUORUM=1
+      - MESOS_ZK=zk://localhost:2181/mesos
 
-marathon:
-  image: mesosphere/marathon:v1.3.0-RC6
-  net: host
-  environment:
-    - MARATHON_HOSTNAME=127.0.0.1
-    - MARATHON_HTTPS_ADDRESS=127.0.0.1
-    - MARATHON_HTTP_ADDRESS=127.0.0.1
-    - MARATHON_MASTER=zk://localhost:2181/mesos
-    - MARATHON_ZK=zk://localhost:2181/marathon
+  slave:
+    image: mesosphere/mesos-slave:1.1.0-2.0.107.ubuntu1404
+    network_mode: "host"
+    privileged: true
+    environment:
+      - MESOS_HOSTNAME=localhost
+      - MESOS_IP=127.0.0.1
+      - MESOS_PORT=5051
+      - MESOS_MASTER=zk://localhost:2181/mesos
+      - MESOS_CONTAINERIZERS=docker,mesos
+      - MESOS_WORK_DIR=/var/tmp/mesos
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
+      - /var/run/docker.sock:/var/run/docker.sock
 
-chronos:
-  image: mesoscloud/chronos:2.4.0-ubuntu-14.04
-  net: host
-  environment:
-   - CHRONOS_HTTP_PORT=4400
-   - CHRONOS_MASTER=zk://localhost:2181/mesos
-   - CHRONOS_ZK_HOSTS=localhost:2181
+  marathon:
+    image: mesosphere/marathon:v1.3.6
+    network_mode: "host"
+    environment:
+      - MARATHON_HOSTNAME=127.0.0.1
+      - MARATHON_HTTPS_ADDRESS=127.0.0.1
+      - MARATHON_HTTP_ADDRESS=127.0.0.1
+      - MARATHON_MASTER=zk://localhost:2181/mesos
+      - MARATHON_ZK=zk://localhost:2181/marathon
 
-bamboo:
-  net: host
-  image: luprzybyl/bamboo:0.2.21_afdcb6b
-  environment:
-   - MARATHON_ENDPOINT=http://localhost:8080
-   - BAMBOO_ENDPOINT=http://localhsot:8000
-   - BAMBOO_ZK_HOST=localhost:2181
-   - BAMBOO_ZK_PATH=/bamboo
-   - BAMBOO_DOCKER_AUTO_HOST=true
+  # chronos:
+  #   image: mesoscloud/chronos:2.4.0-ubuntu-14.04
+  #   network_mode: "host"
+  #   environment:
+  #   - CHRONOS_HTTP_PORT=4400
+  #   - CHRONOS_MASTER=zk://localhost:2181/mesos
+  #   - CHRONOS_ZK_HOSTS=localhost:2181
+
+  bamboo:
+    network_mode: "host"
+    image: luprzybyl/bamboo:0.2.21_afdcb6b
+    environment:
+    - MARATHON_ENDPOINT=http://localhost:8080
+    - BAMBOO_ENDPOINT=http://localhsot:8000
+    - BAMBOO_ZK_HOST=localhost:2181
+    - BAMBOO_ZK_PATH=/bamboo
+    - BAMBOO_DOCKER_AUTO_HOST=true
