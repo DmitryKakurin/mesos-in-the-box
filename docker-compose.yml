@@ -16,10 +16,17 @@ services:
       - MESOS_IP=127.0.0.1
       - MESOS_QUORUM=1
       - MESOS_ZK=zk://localhost:2181/mesos
+      - MESOS_LOG_DIR=/var/tmp/mesos
+      - MESOS_LOGGING_LEVEL=INFO
 
   slave:
     image: mesosphere/mesos-slave:1.1.0-2.0.107.ubuntu1404
     network_mode: "host"
+    ports:
+      # - "80"
+      # - "443"
+      # - "9090:9091"
+      - "10000:10100"
     privileged: true
     environment:
       - MESOS_HOSTNAME=localhost
@@ -28,6 +35,9 @@ services:
       - MESOS_MASTER=zk://localhost:2181/mesos
       - MESOS_CONTAINERIZERS=docker,mesos
       - MESOS_WORK_DIR=/var/tmp/mesos
+      - MESOS_LOG_DIR=/var/log/mesos
+      - MESOS_RESOURCES='ports:[10000-10100]'
+#      - MESOS_DEFAULT_ROLE=slave_public
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
       - /var/run/docker.sock:/var/run/docker.sock
@@ -36,11 +46,12 @@ services:
     image: mesosphere/marathon:v1.3.6
     network_mode: "host"
     environment:
-      - MARATHON_HOSTNAME=127.0.0.1
-      - MARATHON_HTTPS_ADDRESS=127.0.0.1
-      - MARATHON_HTTP_ADDRESS=127.0.0.1
+      # - MARATHON_HOSTNAME=127.0.0.1
+      # - MARATHON_HTTPS_ADDRESS=127.0.0.1
+      # - MARATHON_HTTP_ADDRESS=127.0.0.1
       - MARATHON_MASTER=zk://localhost:2181/mesos
       - MARATHON_ZK=zk://localhost:2181/marathon
+      - MARATHON_LOGGING_LEVEL=info
 
   # chronos:
   #   image: mesoscloud/chronos:2.4.0-ubuntu-14.04
@@ -50,12 +61,12 @@ services:
   #   - CHRONOS_MASTER=zk://localhost:2181/mesos
   #   - CHRONOS_ZK_HOSTS=localhost:2181
 
-  bamboo:
-    network_mode: "host"
-    image: luprzybyl/bamboo:0.2.21_afdcb6b
-    environment:
-    - MARATHON_ENDPOINT=http://localhost:8080
-    - BAMBOO_ENDPOINT=http://localhsot:8000
-    - BAMBOO_ZK_HOST=localhost:2181
-    - BAMBOO_ZK_PATH=/bamboo
-    - BAMBOO_DOCKER_AUTO_HOST=true
+  # bamboo:
+  #   network_mode: "host"
+  #   image: luprzybyl/bamboo:0.2.21_afdcb6b
+  #   environment:
+  #   - MARATHON_ENDPOINT=http://localhost:8080
+  #   - BAMBOO_ENDPOINT=http://localhsot:8000
+  #   - BAMBOO_ZK_HOST=localhost:2181
+  #   - BAMBOO_ZK_PATH=/bamboo
+  #   - BAMBOO_DOCKER_AUTO_HOST=true
